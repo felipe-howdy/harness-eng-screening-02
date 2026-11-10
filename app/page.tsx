@@ -1,16 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { taskView } from "@/lib/taskView";
 import type { Filter, Task } from "@/lib/types";
 import { AddTaskForm } from "./components/AddTaskForm";
 import { FilterBar } from "./components/FilterBar";
 import { TaskList } from "./components/TaskList";
-
-function applyFilter(tasks: Task[], filter: Filter): Task[] {
-  if (filter === "active") return tasks.filter((t) => !t.completed);
-  if (filter === "completed") return tasks.filter((t) => t.completed);
-  return tasks;
-}
 
 export default function Page() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -37,15 +32,10 @@ export default function Page() {
   }
 
   async function handleToggle(task: Task) {
-    const completed = !task.completed;
-    const completedAt = completed
-      ? new Date().toISOString()
-      : task.completedAt;
-    const updated: Task = { ...task, completed, completedAt };
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
+      body: JSON.stringify({ completed: !task.completed }),
     });
     await refresh();
   }
@@ -55,8 +45,7 @@ export default function Page() {
     await refresh();
   }
 
-  const displayedTasks = applyFilter(tasks, filter);
-  const activeCount = displayedTasks.filter((t) => !t.completed).length;
+  const { displayedTasks, activeCount } = taskView(tasks, filter);
 
   return (
     <main className="mx-auto max-w-2xl p-6">
