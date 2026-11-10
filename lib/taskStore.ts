@@ -87,8 +87,13 @@ export function createTask(input: {
 export function updateTask(id: string, patch: Partial<Task>): Task | undefined {
   const idx = tasks.findIndex((t) => t.id === id);
   if (idx === -1) return undefined;
-  tasks[idx] = { ...tasks[idx], ...patch };
-  return tasks[idx];
+  const current = tasks[idx];
+  // completedAt is server-owned: derived from `completed`, never taken from the patch.
+  const next: Task = { ...current, ...patch, completedAt: current.completedAt };
+  if (!next.completed) delete next.completedAt;
+  else if (!current.completed) next.completedAt = new Date().toISOString();
+  tasks[idx] = next;
+  return next;
 }
 
 export function deleteTask(id: string): boolean {

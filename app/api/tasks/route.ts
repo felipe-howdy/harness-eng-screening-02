@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   if (typeof body?.title !== "string" || body.title.trim() === "") {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
   }
